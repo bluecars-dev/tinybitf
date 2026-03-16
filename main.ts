@@ -11,7 +11,7 @@ namespace TinybitPro {
     // ==========================================
     export let WHEELBASE = 0.082;         // 8.2cm
     export let M_PER_PWM_S = 0.00215;    // Meters per PWM unit per sec
-    
+
     // GEARBOX TUNING
     export let kF = 60;                  // Minimum "Kick" to move gears (45-70)
     export let SLEW_RATE = 15;           // Max PWM change per 20ms
@@ -19,8 +19,8 @@ namespace TinybitPro {
     export let ANGLE_TOLERANCE = 0.05;    // Radians (~3 degrees)
 
     // SLAM SETUP
-    export let GRID_RES = 0.05; 
-    export let MAP_DIM = 40; 
+    export let GRID_RES = 0.05;
+    export let MAP_DIM = 40;
 
     // ==========================================
     // 2. INTERNAL STATE
@@ -28,13 +28,13 @@ namespace TinybitPro {
     export let x = 0.0, y = 0.0, theta = 0.0;
     let motorLeftTarget = 0, motorRightTarget = 0;
     let motorLeftActual = 0, motorRightActual = 0;
-    
+
     let lastOdomTime = control.micros();
     let isMoving = false;
 
     // Directional safety (prevents gear grinding/oscillation)
-    let car_flag_old = 0; 
-    let car_flag_new = 0; 
+    let car_flag_old = 0;
+    let car_flag_new = 0;
 
     const PWM_ADD = 0x01;
     const MOTOR_REG = 0x02;
@@ -58,23 +58,23 @@ namespace TinybitPro {
         // Gearbox Logic: Boost small signals to kF so gears actually turn
         if (l != 0 && Math.abs(l) < kF) l = (l > 0) ? kF : -kF;
         if (r != 0 && Math.abs(r) < kF) r = (r > 0) ? kF : -r;
-        
+
         // Zero-out noise
         if (Math.abs(l) < 10) l = 0;
         if (Math.abs(r) < 10) r = 0;
 
         // Directional State Tracking
-        if (l >= 0 && r >= 0) car_flag_new = 0;      
-        else if (l < 0 && r < 0) car_flag_new = 1;  
-        else if (l > 0 && r < 0) car_flag_new = 2;  
-        else car_flag_new = 3;                      
+        if (l >= 0 && r >= 0) car_flag_new = 0;
+        else if (l < 0 && r < 0) car_flag_new = 1;
+        else if (l > 0 && r < 0) car_flag_new = 2;
+        else car_flag_new = 3;
 
         // SAFETY: If direction flipped, stop briefly to protect gearbox
         if (car_flag_new != car_flag_old) {
             let stopBuf = pins.createBuffer(5);
             stopBuf[0] = MOTOR_REG; // All zeros
             pins.i2cWriteBuffer(PWM_ADD, stopBuf);
-            basic.pause(100); 
+            basic.pause(100);
             car_flag_old = car_flag_new;
         }
 
@@ -157,7 +157,7 @@ namespace TinybitPro {
             motorLeftTarget = speed;
             motorRightTarget = speed;
             updateMotorLogic();
-            basic.pause(20); 
+            basic.pause(20);
         }
         stop();
     }
